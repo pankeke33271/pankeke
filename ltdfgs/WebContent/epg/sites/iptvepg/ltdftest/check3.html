@@ -1,0 +1,709 @@
+<!-- <%@ page contentType="text/html; charset=UTF-8" language="java" import="java.util.*,java.text.*,java.io.*,java.sql.*" errorPage="" %> -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="page-view-size" content="1280*720" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+    /* 
+     布局（grid）（.g-）
+     模块（module）（.m-）
+     元件（unit）（.u-）
+     功能（function）（.f-）
+     皮肤（skin）（.s-）
+     状态（.z-）
+     */
+        * { cursor: default; outline: 0; }
+        *:focus { outline: 0;}
+        html,body { margin: 0; padding: 0; width: 1280px; height: 720px; background: transparent; color: #fff; font-size: 18px; }/*  background-color: cadetblue; */
+        .g-index { top: 0; left: 0; width: 1280px; height: 720px; background: url(./imgs/page-bg.png) left top no-repeat; overflow: hidden;}/*  background: #071e40; */
+        
+        .f-pos-abs { position: absolute;}
+        .f-pos-rel { position: relative;}
+        .f-hidden { visibility: hidden; display: none;}
+        .f-show { visibility: visible; display: block;}
+        .z-focus { background: darkorange; color: chartreuse; box-shadow:0 1px 15px rgba(59,255,255,0.8); -webkit-box-shadow:0 1px 15px rgba(59,255,255,0.8); animation: f-focus 2s ease-in-out 0s infinite alternate-reverse; -webkit-animation: f-focus 2s ease-in-out 0s infinite alternate-reverse;}
+        .z-focus-v { border: 1px solid darkorange; box-shadow:0 1px 15px rgba(59,255,255,0.8); -webkit-box-shadow:0 1px 15px rgba(59,255,255,0.8); animation: f-focus 2s ease-in-out 0s infinite alternate-reverse; -webkit-animation: f-focus 2s ease-in-out 0s infinite alternate-reverse;}
+
+        .m-title { left: 0; top: 0; width: 1280px; height: 80px; line-height: 80px; text-align: center; margin: 0; padding: 0; font-size: 36px;}
+        .m-video { left: 64px; top: 84px; width: 355px; height: 198px; border-radius: 9px;}
+        .m-info-box { right: 64px; top: 84px; width: 768px; height: 198px; border: 1px solid rgba(215, 225, 228, 0.7); border-radius: 5px; overflow: hidden;}
+        .m-info-box h3 { width: 94%; height: 40px; line-height: 40px; padding: 0 3%; margin: 0; text-align: center; font-size: 22px; font-weight: normal;}
+        .m-info-box ul { margin: 0; padding: 5px 0; list-style: none;}
+        .m-info-box ul li { width: 94%; padding: 3px 3%;}
+        .m-ini-file { right: 64px; top: 300px; width: 770px; height: 30px; line-height: 30px; font-size: 16px;}
+        #j-vod-cdn-url { word-break: break-all;}
+
+        .m-btn-box { left: 64px; top: 300px; width: 357px; height: 30px;}
+        .m-btn-box .u-btn-check { float: left; display: block; font-size: 16px; width: 106px; height: 25px; line-height: 25px; padding: 0px; margin: 0 5px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.7); text-align: center;}
+
+        .m-play-list { left: 64px; bottom: 36px; width: 257px; height: 294px; margin: 0; padding: 5px 5px 10px 5px; background: rgba(255, 255, 255, 0.3); overflow: hidden; border-radius: 5px; overflow: hidden;}
+        .m-play-list li { list-style: none; height: 20px; line-height: 20px; font-size: 14px; border-bottom: 1px dashed rgba(255, 255, 255, 0.3); padding-top: 5px; width: 100%; overflow: hidden;}
+        .m-play-list .play { background-color: chartreuse; color: black;}
+        .m-play-list-title { left: 64px; bottom: 350px; width: 267px; height: 20px; line-height: 20px; margin: 0; padding: 0px;}
+
+        .m-data-info { right: 64px; bottom: 36px; width: 848px; height: 294px; margin: 0; padding: 5px 10px 10px 10px; background: rgba(255, 255, 255, 0.3); overflow: hidden; border-radius: 5px; overflow: hidden;}
+        .m-data-info li { list-style: none; height: 20px; line-height: 20px; font-size: 12px; border-bottom: 1px dashed rgba(255, 255, 255, 0.3); padding-top: 5px; width: 100%; overflow: hidden; white-space: nowrap;}
+        .m-data-info-title { right: 64px; bottom: 350px; width: 868px; height: 20px; line-height: 20px; margin: 0; padding: 0;}
+
+        ul li.err-play { color: red;}
+        ul li.err-info { color: #00d2de;}
+        ul li.normal { color: greenyellow;}
+
+        @keyframes f-focus {
+            from { box-shadow:0 0 15px 3px rgba(59,255,255,0.8);}
+            to { box-shadow:0 0 15px 3px rgba(59,255,255,0.2);}
+        }
+        @-webkit-keyframes f-focus {
+            from { box-shadow:0 0 15px 3px rgba(59,255,255,0.8);}
+            to { box-shadow:0 0 15px 3px rgba(59,255,255,0.2);}
+        }
+    </style>
+</head>
+<body>
+    <div class="f-pos-abs g-index">
+        <h1 class="f-pos-abs m-title">广西IPTV联通域节目上下线自动核验</h1>
+        <div id="j-video" class="f-pos-abs m-video"></div>
+        <div id="j-info-box" class="f-pos-abs m-info-box">
+            <!-- <h3>----------&nbsp;&nbsp;当前影片信息&nbsp;&nbsp;----------</h3> -->
+            <ul id="j-detail-box" class="m-detail-box">
+                <li><span>节目名称：</span><span id="j-vod-name"></span></li>
+                <li><span>节目CODE：</span><span id="j-vod-code"></span><span>&nbsp;&nbsp;&nbsp;&nbsp;节目来源：</span><span id="j-vod-cp"></span></li>
+                <li><span>绑定栏目：</span><span id="j-vod-bind-type"></span></li>
+                <li><span>CDN&nbsp;&nbsp;URL：</span><span id="j-vod-cdn-url"></span></li>
+            </ul>
+        </div>
+        <div id="j-ini-file" class="f-pos-abs m-ini-file"><span>当前数据文件：</span><span id="j-ini-path"></span></div>
+        <div class="f-pos-abs m-btn-box">
+            <div id="j-btn-check-0" class="u-btn-check z-focus">分时校验</div>
+            <div id="j-btn-check-1" class="u-btn-check">全天校验</div>
+            <div id="j-btn-check-2" class="u-btn-check">异常校验</div>
+        </div>
+        <ul id="j-data-info" class="f-pos-abs m-data-info">
+            <!-- <li>0E|2015112002|20160524131952|vod_verify_h|内容Code,内容名称,YYYY:MM:DD:HH24,激活,可播放|分时校验|dx|0</li>
+            <li>0E|2015112002|20160524131952|vod_verify_d|内容Code,内容名称,YYYY:MM:DD,去激活，不可播放|全天校验|dx|0</li> -->
+        </ul>
+        <div class="f-pos-abs m-data-info-title">核验上报日志：（<span id="j-err-count">0/0</span>）</div>
+        <ol id="j-play-list" class="f-pos-abs m-play-list">
+            <!-- <li>内容名称内容名称内容名称内容名称</li> -->
+        </ol>
+        <div class="f-pos-abs m-play-list-title">核验节目列表：（<span id="j-check-count">0</span>）</div>
+    </div>
+    <div id="logBox" style="position: absolute;left: 0px;bottom: 0px;width: 1280px;height: 300px;overflow:hidden;display:none;"></div>
+    <script>
+		/*本地浏览器测试模拟
+		var myMediaPlayer = function(){
+			this.getNativePlayerInstanceID=function(){};
+			this.releaseMediaPlayer=function(){};
+			this.initMediaPlayer=function(){};
+			this.setChannelNoUIFlag=function(){};
+			this.setAllowTrickmodeFlag=function(){};
+			this.setNativeUIFlag=function(){};
+			this.setAudioTrackUIFlag=function(){};
+            this.setAudioVolumeUIFlag=function(){};
+            this.setMuteUIFlag=function(){};
+            this.stop=function(){};
+            
+            this.setVideoDisplayMode=function(){};
+            this.setVideoDisplayArea=function(){};
+            this.refreshVideoDisplay=function(){};
+            this.clearAllMedia=function(){};
+
+            this.setSingleOrPlaylistMode=function(){};
+            this.setSingleMedia=function(){};
+            this.playFromStart=function(){};
+            this.getMediaDuration=function(){return 100;};
+		}
+		if(typeof(MediaPlayer) == "undefined"){
+        	MediaPlayer = myMediaPlayer;
+        }*/ 
+		
+		var myLog = {
+			info:function(msg){
+				if(testFlag == 0) document.getElementById("logBox").innerHTML = msg+"<br />"+document.getElementById("logBox").innerHTML;
+			}
+		};
+		
+		var baseApi = "./data/";              
+        //var baseApi = "./data-test/";	//测试api
+        
+		//测试标识用于输出日志和执行测试代码 0 为生效
+		var testFlag = 1;
+        
+        if(testFlag == 0){
+        	document.getElementById("logBox").style.display = "block";
+        }
+        
+		function getAuthenticationAttr(name) {
+	   		if((typeof Authentication) != "undefined") {
+	   			return Authentication.CTCGetConfig(name);
+	   		} else {
+	   			return name;
+	   		}
+	   	}
+		
+		var userId = getAuthenticationAttr("UserID");
+		var userToken = getAuthenticationAttr("UserToken");
+		
+		myLog.info("userId="+userId+",userToken="+userToken);
+        
+        function mPlayer() {
+            var This = this;
+            var mp = new MediaPlayer();
+            var npInsId = void 0;
+
+            this.mediaDataStatus = -1; //获取数据标识。1-已完成
+            this.mediaData = void 0;
+            this.getDataTime = 3*60*1000;
+
+            var iniModifyTime = -1; //当前数据文件修改时间
+            var iniFileSize = -1; //当前数据文件大小
+            var dataTotal = 0; //总数据数量
+            var playIndex = -1; //当前播放节目索引
+
+            var init = function() {
+                npInsId = mp.getNativePlayerInstanceID(); //STB本地播放器实例的instanceID
+                mp.initMediaPlayer(npInsId, 0, 0, 198, 355, 64, 84, 0, 1, 0, 0, 0, 0, 0);
+                mp.setChannelNoUIFlag(0);
+                mp.setAllowTrickmodeFlag(0);	//设置是否允许trick操作。 0:允许 1：不允许
+                mp.setNativeUIFlag(0);			//播放器是否显示缺省的Native UI，  0:不允许 1：允许
+                mp.setAudioTrackUIFlag(0);		//设置音轨的本地UI显示标志 0:不允许 1：允许
+                mp.setAudioVolumeUIFlag(0);		//设置音量调节本地UI的显示标志 0:不允许 1：允许
+                mp.setMuteUIFlag(0);			//设置静音的本地UI显示标志 0:不允许 1：允许
+                // console.log('init');
+            }
+
+            /**
+             * 根据节目播放CDN地址生成符合播放器使用的播放串
+             */
+            var createMediaJson = function(playUrl, code) {
+                if (playUrl!=void 0 && playUrl!='') {
+                    var vjson = '';
+                    vjson += '[{mediaUrl:"'+ playUrl +'",';
+                    vjson += 'mediaCode: "'+ code +'",';
+                    vjson += 'mediaType:2,';
+                    vjson += 'audioType:1,';
+                    vjson += 'videoType:1,';
+                    vjson += 'streamType:1,';
+                    vjson += 'drmType:1,';
+                    vjson += 'fingerPrint:0,';
+                    vjson += 'copyProtection:1,';
+                    vjson += 'allowTrickmode:1,';
+                    vjson += 'startTime:0,';
+                    vjson += 'endTime:0,';
+                    vjson += 'entryID:"VOD_'+ code +'"}]';
+
+                    return vjson;
+                }
+
+                return void 0;
+            }
+
+            /**
+             * 获取数据
+             * @param flag string 数据类型标识。d-按天；h-按小时；e-异常数据
+             */
+            this.getData = function(flag, cb) {
+                var api = '';
+                switch (flag) {
+                    case 'd':
+                        api = baseApi+'getIniData.jsp?type=d';
+                        break;
+                    case 'h':
+                        api = baseApi+'getIniData.jsp?type=h';
+                        break;
+                    case 'e':
+                        api = baseApi+'getIniData.jsp?type=e';
+                        break;
+                    default:
+                        api = baseApi+'getIniData.jsp?type=h';
+                        break;
+                }
+                
+                if (!!api) {
+                    This.mediaData = void 0;
+                    This.mediaDataStatus = 0;
+                    
+                    if(!!This.getDataTimer){
+                    	clearTimeout(This.getDataTimer);
+                    }
+
+                    $.ajax({
+                        url: api,
+                        dataType: 'json',
+                        async: false, //是否异步
+                        timeout: 30000,
+                        success: function(res) {
+                        	//兼容机顶盒没有将返回结果转为json对象的问题
+                        	if(typeof(res) == "string"){
+                        		eval("res="+res);
+                        	}
+                        	
+                            $('j-ini-path').innerHTML = res.INIFILE;
+                            
+                            iniModifyTime = res.MODIFYTIME;
+                            iniFileSize = res.FILESIZE;
+                            if (res.RSCODE==0) {
+                                This.mediaDataStatus = 1;
+                                This.mediaData = res.RSDATA;
+
+                                // 渲染播放列表
+                                for (var i=0; i<This.mediaData.length; i++) {
+                                    var nd = This.mediaData[i];
+                                    var node = document.createElement('li');
+                                    node.setAttribute('id', nd.CODE);
+                                    node.innerHTML = nd.NAME;
+                                    $('j-play-list').appendChild(node);
+                                    if (i==0) { playIndex = 0;}
+                                }
+                                if (!!cb && Object.prototype.toString.call(cb)=='[object Function]') { cb(This.mediaData);}
+                            } else {
+                                This.mediaDataStatus = -1;
+                                var errInfo = '0x'+ res.RSCODE.toString(16) +' , '+ res.RSMSG +'：'+ res.INIFILE;
+                                $('j-vod-cdn-url').innerHTML = '<br /><span style="color:red;">'+ errInfo +'</span>';
+                                This.getDataTimer = setTimeout(function() {
+                                    This.getData(flag, cb);
+                                }, This.getDataTime);
+                                // epg.debug.error(errInfo);
+                            }
+                        },
+                        error: function(xhr, status, errorThrown) {
+                            if (!!errorThrown) { This.mediaDataStatus = -1; }
+                        }
+                    });
+                }
+
+                return this;
+            }
+
+            this.isChanged = function(mt, fs) {
+                if (arguments.length>1) {
+                    return iniModifyTime != mt || iniFileSize != fs;
+                } else {
+                    return iniModifyTime != mt;
+                }
+            }
+
+            this.play = function() { //使用前先调用setPlayUrl生成播放串
+                var prs = false;
+                if (typeof mp != 'undefined' && !!mp) mp.stop();
+                var playUrl, code, name, cpname, types;
+                if (playIndex<0) { playIndex = 0; }
+                if (!This.mediaData || playIndex>=This.mediaData.length) { playIndex = -1; return prs;}
+
+                // playUrl = This.mediaData[playIndex].CDNURL;
+                code = This.mediaData[playIndex].CODE;
+                name = This.mediaData[playIndex].NAME;
+                cpname = This.mediaData[playIndex].CPNAME;
+                types = This.mediaData[playIndex].TYPES;
+                $('j-vod-name').innerHTML = name;
+                $('j-vod-code').innerHTML = code;
+                $('j-vod-cp').innerHTML = cpname;
+                $('j-vod-bind-type').innerHTML = types;
+                $('j-vod-cdn-url').innerHTML = '';
+                $('j-check-count').innerHTML = (playIndex+1) +'/'+ This.mediaData.length;
+                var css = $(code).className;
+                $(code).className = css +' play';
+				//myLog.info("getPlayurl:"+baseApi+'getplayUrl.jsp?contentID='+ code+'&userId='+userId+'&userToken='+userToken);
+                $.ajax({
+                    url: baseApi+'getplayUrl.jsp?contentID='+ code+'&userId='+userId+'&userToken='+userToken,
+                    dataType: 'json',
+                    async: false, //是否异步
+                    timeout: 30000,
+                    success: function(res) {
+                    	//兼容机顶盒没有将返回结果转为json对象的问题
+                    	if(typeof(res) == "string"){
+                    		eval("res="+res);
+                    	}
+                    	/*测试视频播放
+                    	if(testFlag == 0 && res.result != 0){
+                    		
+                    		res = {
+                    			"result":0,
+                    			"playUrl":"http://192.168.220.127:53005/sp_epg/1562738208606iraXB.mp4"
+                    			//"playUrl":"http://121.31.12.182:8005/12/areaNode/2/20210510/90000001000000026370437732784186/00000001000000020000000007837591.m3u8?playType=vod&startProgramDate=1620701700466&expiredTime=300&checkKey=dd9c100f0d6dbc7af879e33fd817950&userId=2017008&stbNo=100&contentID=00000001000000010000000132144082"
+                    		}
+                    	}*/
+                    	   
+                        if (res.result==0) {
+                            playUrl = res.playUrl;
+                            $('j-vod-cdn-url').innerHTML = playUrl;
+
+                            var playJson = createMediaJson(playUrl, code);
+                            // if (!!mp && !!playJson) {
+                                mp.setVideoDisplayMode(0);
+                                mp.setVideoDisplayArea(64, 84, 355, 198);
+                                mp.refreshVideoDisplay();
+                                //清空播放列表
+                                try { mp.clearAllMedia(); } catch (error) {}
+
+                                mp.setSingleOrPlaylistMode(0);
+                                mp.setSingleMedia(playJson);
+                                // mp.play();
+                                mp.playFromStart(); //从媒体起始点开始播放
+                                // epg.debug.info(playJson);
+                                prs = true;
+
+                                var sdId = setTimeout(function() {
+                                    // var currPlayTime = mp.getCurrentPlayTime();
+                                    var currPlayTime = mp.getMediaDuration();
+                                    // epg.debug.info(currPlayTime +' , '+ parseInt(currPlayTime));
+                                    myLog.info("获取视频时长:"+currPlayTime +' , '+ parseInt(currPlayTime));
+                                    if (currPlayTime<=1 || isNaN(parseInt(currPlayTime))) {
+                                        sendData({'issitcom':0, 'status': '激活,播放异常', 'iserr': 1}, 'err');
+                                        if (!!sdId) { sdId = clearTimeout(sdId);}
+                                    } else {
+                                        sendData({'issitcom':0, 'status': '激活,播放正常', 'iserr': 0}, 'ok');
+                                    }
+                                }, 3500);
+                            /* } else {
+                                sendData({'issitcom':res.ISSITCOM, 'status': '激活,不可播放', 'iserr': 1}, 'err');
+                            } */
+                        }/*  else if (res.result==0x01010400) { //获取播放URL失败
+                            sendData({'issitcom':-1, 'status': '激活,不可播放', 'iserr': 1}, 'err');
+                            $('j-vod-cdn-url').innerHTML = '获取播放URL失败';
+                        } else if (res.result==0x01010404) { //节目不存在
+                            sendData({'issitcom':-1, 'status': '去激活,不可播放', 'iserr': 1}, 'err');
+                            $('j-vod-cdn-url').innerHTML = '节目不存在';
+                        } */
+                        else if(res.result=="-99"){
+                        	sendData({'issitcom':0, 'status': '未激活,不可播放', 'iserr': 1}, 'err');
+                            $('j-vod-cdn-url').innerHTML = '节目不存在';
+                        }else{
+                        	sendData({'issitcom':0, 'status': '激活,不可播放', 'iserr': 1}, 'err');
+                            $('j-vod-cdn-url').innerHTML = res.description||res.desc||'获取播放URL失败';
+                        }
+                    },
+                    error: function(xhr, status, errorThrown) {
+                        if (!!errorThrown) {}
+                    }
+                });
+
+                return prs;
+            }
+
+            /**
+             * 播放下一个
+             */
+            this.next = function() {
+                ++playIndex;
+                if (playIndex<0 || playIndex>=This.mediaData.length) {
+                    playIndex = -1;
+                    if (typeof mp != 'undefined' && !!mp) mp.stop();
+                    return false;
+                }
+                var id = This.mediaData[(playIndex<=0 ? 0 : playIndex-1)].CODE;
+                var css = $(id).className;
+                $(id).className = css.replace(' play', '');
+                $('j-play-list').scrollTop = Math.floor(playIndex/11)*(11*26);
+
+                if (playIndex<This.mediaData.length) {
+                    This.play();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            /**
+             * 获取当前播放的节目索引
+             */
+            this.getPlayIndex = function() {
+                return playIndex;
+            }
+
+            this.checkIniStatus = function(flag, cb) {
+                var api = '';
+                switch (flag) {
+                    case 'd':
+                        api = baseApi+'getIniData.jsp?type=d';
+                        break;
+                    case 'h':
+                        api = baseApi+'getIniData.jsp?type=h';
+                        break;
+                    case 'e':
+                        api = baseApi+'getIniData.jsp?type=e';
+                        break;
+                    default:
+                        api = baseApi+'getIniData.jsp?type=h';
+                        break;
+                }
+
+                var data = void 0;
+                if (!!api) {
+                    api += '&status=1';
+
+                    $.ajax({
+                        url: api,
+                        dataType: 'json',
+                        async: true, //true-异步; false-同步
+                        timeout: 3000,
+                        success: function(res) {
+                        	//兼容机顶盒没有将返回结果转为json对象的问题
+                        	if(typeof(res) == "string"){
+                        		eval("res="+res);
+                        	}
+                            data = res;
+                            if (!!cb && Object.prototype.toString.call(cb)=='[object Function]') { cb(res);}
+                        },
+                        error: function(xhr, status, errorThrown) { }
+                    });
+                }
+            }
+
+            //释放播放器资源
+            this.destroy = function() {
+                if (typeof mp != 'undefined' && !!mp) {
+                    mp.stop();
+                    mp.releaseMediaPlayer(npInsId);
+                }
+            }
+
+            init();
+        }
+
+        var currType = '';
+        var errCount = 0;
+        var okCount = 0;
+        var sendData = function(args, flag) {
+            if (!currType) { return false;}
+            // epg.debug.info(JSON.stringify(args));
+            var surl = baseApi+'postData.jsp';
+            $.ajax({
+                url: surl,
+                type:"POST",
+                dataType: 'json',
+                data: {
+                    ctype: currType,
+                    ccode: p.mediaData[p.getPlayIndex()].CODE,
+                    cname: p.mediaData[p.getPlayIndex()].NAME,
+                    userId:userId,
+                    userToken:userToken,
+                    issitcom: args.issitcom,
+                    cstatus: args.status,
+                    iserr: args.iserr
+                },
+                async: false, //true-异步; false-同步
+                timeout: 3000,
+                success: function(res) {
+                	//兼容机顶盒没有将返回结果转为json对象的问题
+                	if(typeof(res) == "string"){
+                		eval("res="+res);
+                	}
+                	myLog.info("日志发送响应结果："+res.RES);
+                    // epg.debug.info(res.RSDATA);
+                    var node = document.createElement('li');
+                    if (flag=='err') {
+                        node.innerHTML = '<span style="color:'+(res.RES?'red':'#000')+';">'+ res.RSDATA +'<span>';
+                        errCount++;
+                    } else {
+                        node.innerHTML = '<span style="color:'+(res.RES?'gray':'#000')+';">'+ res.RSDATA +'<span>';
+                        // node.innerHTML = '<span style="color:green;">'+ res.RSDATA +'<span>';
+                        okCount++;
+                    }
+                    $('j-data-info').insertBefore(node, $('j-data-info').childNodes[0]);
+                    $('j-err-count').innerHTML = errCount +'|'+ okCount;
+                },
+                error: function(xhr, status, errorThrown) {
+                    //epg.debug.info(status);
+                }
+            });
+        }
+        
+		var $ = function(id) { return document.getElementById(id);};
+        
+		$.ajax = function(opts){ 
+			var ajaxData = { 
+				type:opts.type || "GET", 
+				url:opts.url || "", 
+				async:opts.async || "true", 
+				data:opts.data || null, 
+				dataType:opts.dataType || "text", 
+				contentType:opts.contentType || "application/x-www-form-urlencoded", 
+				success:opts.success || function(){}, 
+				error:opts.error || function(){} 
+			} 
+			var xhr = createxmlHttpRequest();  
+			xhr.responseType=ajaxData.dataType;
+			if(ajaxData.type == "GET" && !!opts.data){
+				ajaxData.url = ajaxData.url + "?" + convertData(ajaxData.data)
+			}
+			xhr.open(ajaxData.type,ajaxData.url,ajaxData.async);  
+			xhr.setRequestHeader("Content-Type",ajaxData.contentType);
+			xhr.send(convertData(ajaxData.data));  
+			xhr.onreadystatechange = function() {  
+				if (xhr.readyState == 4) {  
+					if(xhr.status == 200){ 
+						ajaxData.success(xhr.response) 
+					}else{ 
+						ajaxData.error() 
+					}  
+				} 
+			}  
+		} 
+  
+		function createxmlHttpRequest() {  
+			if (window.ActiveXObject) {  
+				return new ActiveXObject("Microsoft.XMLHTTP");  
+			} else if (window.XMLHttpRequest) {  
+				return new XMLHttpRequest();  
+			}  
+		} 
+	  
+		function convertData(data){ 
+			if( typeof data === 'object' ){ 
+				var convertResult = "" ;  
+				for(var c in data){  
+					convertResult+= c + "=" + encodeURIComponent(data[c]) + "&";  
+				}  
+				convertResult=convertResult.substring(0,convertResult.length-1) 
+				return convertResult; 
+			}else{ 
+				return data; 
+			} 
+		}
+
+        var p = new mPlayer();
+        var nextTimerId = void 0;
+        var checkIniTimerId = void 0;
+        var check = function(flag) {
+            currType = flag;
+            $('j-data-info').innerHTML = '';
+            errCount = 0;
+            okCount = 0;
+            $('j-err-count').innerHTML = errCount +'|'+ okCount;
+            $('j-check-count').innerHTML = '0/0';
+            $('j-play-list').innerHTML = '';
+            $('j-vod-name').innerHTML = '';
+            $('j-vod-code').innerHTML = '';
+            $('j-vod-cp').innerHTML = '';
+            $('j-vod-bind-type').innerHTML = '';
+            $('j-vod-cdn-url').innerHTML = '';
+            $('j-ini-path').innerHTML = '';
+
+            if (!!nextTimerId) { nextTimerId = clearInterval(nextTimerId);}
+            if (!!checkIniTimerId) { checkIniTimerId = clearInterval(checkIniTimerId);}
+            if (flag=='h' || flag=='d' || flag=='e') {
+                p.getData(flag, function() {
+                    p.play();
+                });
+
+                nextTimerId = setInterval(function() {
+                    // console.log(p.getPlayIndex());
+                    var ps = p.next();
+                    if (!ps) {
+                        nextTimerId = clearInterval(nextTimerId);
+                        if (typeof mp != 'undefined' && !!mp) mp.stop();
+                        checkIniTimerId = setInterval(function() {
+                            p.checkIniStatus(flag, function(d) {
+                                if (d.RSCODE==0) {
+                                    var mt = d.MODIFYTIME;
+                                    var fs = d.FILESIZE;
+                                    var isModify = p.isChanged(mt, fs);
+                                    if (!!isModify) { checkIniTimerId = clearInterval(checkIniTimerId); check(flag);}
+                                }
+                            });
+                        }, p.getDataTime);
+                    }
+                }, 5000);
+            } else {}
+        }
+        check('h');
+
+
+		//页面元素处理
+		//当前聚焦按钮索引
+		var buttonFocusIndex = 0;
+		//按键绑定
+		var keys = {
+			37:"KEY_LEFT",
+			39:"KEY_RIGHT",
+			13:"KEY_ENTER",
+			8:"KEY_RETURN"
+		}
+		
+		//事件绑定
+		var keyHandler = {
+			"KEY_LEFT":function(){
+				buttonFocus(-1);
+			},
+			"KEY_RIGHT":function(){
+				buttonFocus(1);
+			},
+			"KEY_ENTER":function(){
+				buttonClick();
+			},
+			"KEY_RETURN":function(){
+				p.destroy();
+				setTimeout(function(){
+					history.go(-1);
+				},500)
+			},
+			keyList:"",
+			keyListTimer:null,
+			"DEFAULT":function(event){
+				var _this = this;
+				var keyCode = event.keyCode;
+				this.keyList = this.keyList + keyCode;
+				if(!!this.keyListTimer) clearTimeout(this.keyListTimer);
+				//5356525454
+				if(this.keyList == "4848484848"){     
+					//打开隐藏日志面板
+					this.keyList = "";
+		        	$("logBox").style.display = $("logBox").style.display=="none"?"block":"none";
+				}else{
+					this.keyListTimer = setTimeout(function(){
+						_this.keyList = "";
+					},2000);
+				}
+			}
+		}
+
+		document.addEventListener('keydown',function(event){
+			var keyCode = event.keyCode;
+			var handler = keyHandler[keys[keyCode]||"DEFAULT"];
+			if(Object.prototype.toString.call(handler)=='[object Function]'){
+				handler.apply(keyHandler,[event]);
+			}
+
+		})
+
+		//光标处理
+		function buttonFocus(index){
+			if(buttonFocusIndex + index < 0 || buttonFocusIndex + index > 2){
+				return;
+			}
+			$("j-btn-check-"+buttonFocusIndex).className = "u-btn-check";
+			buttonFocusIndex = buttonFocusIndex + index;
+			$("j-btn-check-"+buttonFocusIndex).className = "u-btn-check z-focus";
+		}
+
+		//确认键处理
+		function buttonClick(){
+			switch(buttonFocusIndex){
+				case 0:
+					check("h");
+					break;
+				case 1:
+					check("d");
+					break;
+				case 2:
+					check("e");
+					break;
+				default:
+					break;
+			}
+		}
+
+
+        //new Collect.Collect('dx', 0).auto(); //大数据采集
+        window.addEventListener('onbeforeunload', function() {
+            p.destroy();
+        });
+    </script>
+</body>
+</html>
